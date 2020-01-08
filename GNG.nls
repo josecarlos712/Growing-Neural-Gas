@@ -1,55 +1,75 @@
 breed [GNG:nodes GNG:node]
 
+globals [node-count x-node]
+
 GNG:nodes-own [
   node-error  ; Local error variable
-  node-id  
+  node-id     ; 
+  node-links  ; list of links thats define its topological neigbours
 ]
 
 to GNG:setup
   ask patches [set pcolor white]
   clear-turtles
   reset-ticks
+  set node-count 0
   
-  create-GNG:nodes 2 [
-    set xcor (random (2 * max-pxcor)) - max-pxcor
-    print xcor
-    set ycor (random (2 * max-pycor)) - max-pycor
-    set node-error 0.0
-    set color black
-    set shape "circle"
-    set node-id node-count
-    set node-count node-count + 1
-  ]
+  GNG:crear-nodo (list 0 0) red ; Creacion del nodo central (que define la estructura)
+  ;------ Creacion de la nube de puntos -------
+  ; (Crear un metodo que haga esto para una lista de puntos en un csv
+  repeat 10 [ GNG:crear-nodo (list ((random (2 * max-pxcor)) - max-pxcor) ((random (2 * max-pycor)) - max-pycor)) black ]
   
-  ask GNG:node 0 [
-    create-link-with turtle 1
-    show link-with GNG:node 1
-    ;set link-weight
-  ]
+  ;---------------------------
   
-  create-turtles 1 [
-    set xcor first x-node
-    set ycor last x-node
-    set color red
-    set shape "circle"
+  ask GNG:nodes with [node-id mod 2 = 0 and not (node-id = 0)] [
+    ask GNG:nodes with [node-id = [node-id] of myself - 1] [
+      create-link-with myself
+      show link-with myself
+    ]
   ]
   
   print node-count
 end
 
-to-report module2D [vector]
-  check vector
+to-report GNG:module2D [vector] ; Calcula el modulo de un vector 2D
+  GNG:check vector
   
   report sqrt ((first vector) ^ 2 + (last vector) ^ 2)
 end
 
-to-report vector-substract [vector1  vector2]
-  check vector1
-  check vector2
+to-report GNG:vector-substract [vector1  vector2] ; Calculor de la diferencia: v1 - v2
+  GNG:check vector1
+  GNG:check vector2
   
   report (list (first vector1 - first vector2) (last vector1 - last vector2))
 end
 
-to check [vector]
-  if length vector != 2 [print (word "Error in /module2D/ parameters: " vector)] ; Check vector is 2D vector
+to-report GNG:nearest-to [n1] ; Devuelve el id del nodo mas cercano a n1
+  let nearest-id -1
+  ask GNG:nodes with [node-id = n1] [
+    let minima min [distance myself] of GNG:nodes with [not (node-id = n1)]
+    ask GNG:nodes with [distance myself = minima] [set nearest-id node-id]
+    ;print (word "minimo id: " nearest-id)
+  ]
+  report nearest-id
+end
+
+to GNG:check [vector] ; Checkea si un vector es bidimensional
+  if length vector != 2 [print (word "Error in /GNG:check/ parameters: " vector)] ; Check vector is 2D vector
+end
+
+to GNG:crear-nodo [vector ncolor] ; Crea un GNG:node especificando el vector de posicion y el color con ncolor
+  GNG:check vector
+  create-GNG:nodes 1 [
+    set xcor first vector
+    ;print xcor
+    set ycor last vector
+    set node-error 0.0
+    set color ncolor
+    set shape "circle"
+    set node-id node-count
+    set label node-id
+    set node-count node-count + 1
+    set node-links (list)
+  ]
 end

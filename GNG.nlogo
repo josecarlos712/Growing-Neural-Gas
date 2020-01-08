@@ -1,20 +1,21 @@
 __includes [ "GNG.nls" ]
 
-globals [x-node node-count]
+globals [  ]
 
 to setup
   ;---- sustituir por el vector dado por la distribucion
   set x-node [0 0]
-  set node-count 0
   ;---------------
   GNG:setup
+
+
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
 210
 10
-649
-450
+647
+448
 -1
 -1
 13.0
@@ -36,6 +37,55 @@ GRAPHICS-WINDOW
 1
 ticks
 30.0
+
+BUTTON
+62
+96
+125
+129
+NIL
+setup
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+60
+167
+134
+200
+nearest
+show GNG:nearest-to id
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+SLIDER
+17
+241
+189
+274
+id
+id
+0
+node-count - 1
+2.0
+1
+1
+NIL
+HORIZONTAL
 
 @#$#@#$#@
 ## WHAT IS IT?
@@ -379,7 +429,7 @@ false
 Polygon -7500403 true true 270 75 225 30 30 225 75 270
 Polygon -7500403 true true 30 75 75 30 270 225 225 270
 @#$#@#$#@
-NetLogo 6.1.0
+NetLogo 6.1.1
 @#$#@#$#@
 @#$#@#$#@
 @#$#@#$#@
