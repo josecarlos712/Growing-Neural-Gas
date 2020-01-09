@@ -5,6 +5,7 @@ breed [centers center]
 
 data-own [
   class
+  connect
 ]
 centers-own [
   moved?
@@ -59,10 +60,34 @@ to setup-file
   foreach load Ejemplo  [x ->
     create-data 1 [
     setxy (item 0 x) (item 1 x)
+    set connect -1
+    if (item 2 x) = 0 [create-link-to datum item 2 x [set color red] set connect item 2 x]
     set size 1
     set shape "dot"
     set color black ]
   ]
+
+;  foreach load Ejemplo  [x ->
+;    create-data 1 [
+;    setxy ((item 0 x) + random-entre-dos 3 -3) ((item 1 x) + random-entre-dos 3 -3)
+;    set size 1
+;
+;    set shape "dot"
+;    set color black ]
+;  ]
+end
+
+to save-to-file
+;  foreach sort data [x ->
+;    ask x [ask my-out-links[show end2]]
+;  ]
+;  ask links
+;[ show end2 ]
+  csv:to-file "datasave.data" [ (list round xcor round ycor connect) ] of data
+end
+
+to-report random-entre-dos [ a b ]
+    report a + random (b - a)
 end
 @#$#@#$#@
 GRAPHICS-WINDOW
@@ -101,7 +126,7 @@ Num-Data
 Num-Data
 0
 10000
-500.0
+600.0
 100
 1
 NIL
@@ -223,8 +248,8 @@ CHOOSER
 305
 Ejemplo
 Ejemplo
-"resolve.data"
-0
+"resolve.data" "cometa.data" "datasave.data"
+2
 
 BUTTON
 10
@@ -233,6 +258,23 @@ BUTTON
 354
 Cargar de Fichero
 setup-file
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
+BUTTON
+11
+364
+143
+397
+Exportar a fichero
+save-to-file
 NIL
 1
 T
