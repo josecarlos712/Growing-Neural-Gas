@@ -1,14 +1,14 @@
 breed [GNG:nodes GNG:node]
-breed [GNG:edges GNG:edge]
+undirected-link-breed [GNG:edges GNG:edge]
 
-globals [node-count x-node ew en]
-; un valor normal de ew sseria de 0.05
-; un valor normal de en sseria de 0.0006, aproximadamente 100 veces menos que ew
+globals [node-count x-node] ;ew en alimit max-node-count lamda
+; un valor normal de ew seria de 0.05
+; un valor normal de en seria de 0.0006, aproximadamente 100 veces menos que ew
+; max-nodes = 120, λ = 800, amax = 120, beta = 0.02, η = 0.05 alfa = 0.5
 
 GNG:nodes-own [
   node-error  ; error local del nodo
   node-id     ; numero identificador del nodo
-  node-links  ; lista de links con los vecinos
 ]
 
 GNG:edges-own [
@@ -29,7 +29,7 @@ to GNG:setup
   ; (Crear un metodo que haga esto para una lista de puntos en un csv
   repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
   ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
-  repeat 3 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) green ]
+  repeat 2 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) ]
   create-turtles 1 [
     set xcor 0
     ;print xcor
@@ -41,8 +41,6 @@ to GNG:setup
   ]
   set x-node turtles with [label = "x"]
   GNG:edge-to 0 1
-  GNG:edge-to 0 2
-  GNG:edge-to 1 2 
   ; Utilizar el metodo /GNG:edge-to n1 n2/
 end
 
@@ -61,8 +59,54 @@ to GNG:step
   ask GNG:nodes with [node-id = ws] [set node-error node-error + newerror]
   ; Se mueve s y los vecinos dependiendo de la distancia a x-node
   GNG:move-node ws
-  
-  ;queda añadir el particionado, creacion y destruccion de links
+  ; Se actualiza la edad de los links de s
+  ; Los links cuya edad supere alimit se borran
+  ask GNG:nodes with [node-id = ws] [
+    ask my-GNG:edges [
+      set edge-age edge-age + 1
+      ; si la edad del link es mayor a alimit, este muere
+      if edge-age >= alimit [ 
+        die 
+      ]
+    ]
+    ; Si existe el link entre s y t, su edad se resetea
+    ifelse member? wt [node-id] of GNG:edge-neighbors [
+      ask GNG:edge ws wt [ set edge-age 0 ]
+    ]
+    ; Si no existe el link entre s y t se crea uno 
+    [ GNG:edge-to ws wt ]
+  ]
+  ; Si algun nodo se ha quedado sin links, muere
+  ask GNG:nodes with [count GNG:edge-neighbors = 0] [ die ]
+  ; Si la iteracion actual es multiplo de lamda, se crea un nuevo nodo r
+  ; Sea u el nodo con mayor error
+  let nlist sort GNG:nodes
+  let errors map [n -> [node-error] of n] nlist
+  let u one-of GNG:nodes with [node-error = max errors]
+  ; Sea v el vecino de u con mayor error
+  ask u [ set nlist sort GNG:edge-neighbors ]
+  set errors map [n -> [node-error] of n] nlist
+  let v 0
+  ask u [ set v GNG:edge-neighbors with [node-error = max errors] ]
+  ; Se crea r en el punto medio de u y v si no se ha alcanzado el limite de nodos
+  if ticks mod lamda = 0 and ticks < max-node-count [
+    let posu GNG:check (list [xcor] of u [ycor] of u)
+    let posv GNG:check (list [xcor] of v [ycor] of v)
+    let newr (list ((first posu + first posv) / 2) ;xcor
+      ((last posu + last posv) / 2)) ;ycor ; v + u / 2
+    GNG:crear-nodo newr ; se crea el nodo r
+    let r GNG:nodes with [xcor = first newr and ycor = last newr]  ; almacenar en r el nodo r
+    print (word "nodo " [node-id] of u " | " [node-id] of r)
+    GNG:edge-to [node-id] of u [node-id] of r ; se crea link u r
+    GNG:edge-to [node-id] of v [node-id] of r ; se crea link v r
+    ask GNG:edge [node-id] of u [node-id] of v [ die ] ; se elimina link u v
+    ; Se aplican nuevos errores para u, v y r
+    ask u [ set node-error alfa * node-error]
+    ask v [ set node-error alfa * node-error]
+    ask r [ set node-error [node-error] of u]
+    ; se decrementa el error de todos los nodos por un factor beta
+    ask GNG:nodes [ set node-error node-error - beta * node-error]
+  ]
   tick
 end
 
@@ -94,7 +138,7 @@ to GNG:move-node [id] ; Mover s y sus vecinos ; con ew y en entre 0 y 1
     set xcor (xcor + (ew * first vdist))
     set ycor (ycor + (ew * last vdist))
     
-    ask link-neighbors [
+    ask GNG:edge-neighbors [
       set v2 (list xcor ycor) ; posicion de vecinos de n
       set vdist GNG:vector-substract v1 v2 ; se obtiene la diferencia x - wn
       set xcor (xcor + (en * first vdist))
@@ -103,30 +147,28 @@ to GNG:move-node [id] ; Mover s y sus vecinos ; con ew y en entre 0 y 1
   ]
 end
 
-to GNG:crear-nodo [vector ncolor] ; Crea un GNG:node especificando el vector de posicion y el color con ncolor
+to GNG:crear-nodo [vector] ; Crea un GNG:node especificando el vector de posicion y el color con ncolor
   let v GNG:check vector
   create-GNG:nodes 1 [
     set xcor first v
     ;print xcor
     set ycor last v
     set node-error 0.0
-    set color ncolor
+    set color green
     set shape "circle"
     set size 2
     set node-id node-count
     set label node-id
     set node-count node-count + 1
-    set node-links (list)
   ]
 end
 
 to GNG:edge-to [n1 n2]
   ask GNG:nodes with [node-id = n1] [
     ask GNG:nodes with [node-id = n2] [
-      create-link-with myself
-      set node-links insert-item 0 node-links n1
+      create-GNG:edge-with myself
+      ask GNG:edge n1 n2 [ set edge-age 0 ]
     ]
-    set node-links insert-item 0 node-links n2
   ]
 end
 
