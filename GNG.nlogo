@@ -14,11 +14,11 @@ end
 GRAPHICS-WINDOW
 210
 10
-647
-448
+723
+524
 -1
 -1
-13.0
+5.0
 1
 10
 1
@@ -28,10 +28,10 @@ GRAPHICS-WINDOW
 0
 0
 1
--16
-16
--16
-16
+0
+100
+0
+100
 0
 0
 1
@@ -61,7 +61,7 @@ BUTTON
 134
 200
 nearest
-show GNG:nearest-to id
+show GNG:nearest
 NIL
 1
 T
@@ -72,20 +72,22 @@ NIL
 NIL
 1
 
-SLIDER
-17
-241
-189
-274
-id
-id
-0
-node-count - 1
-2.0
-1
-1
+BUTTON
+103
+48
+188
+81
 NIL
-HORIZONTAL
+GNG:step
+T
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
 
 @#$#@#$#@
 ## WHAT IS IT?

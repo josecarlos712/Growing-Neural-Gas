@@ -1,75 +1,158 @@
 breed [GNG:nodes GNG:node]
+breed [GNG:edges GNG:edge]
 
-globals [node-count x-node]
+globals [node-count x-node ew en]
+; un valor normal de ew sseria de 0.05
+; un valor normal de en sseria de 0.0006, aproximadamente 100 veces menos que ew
 
 GNG:nodes-own [
-  node-error  ; Local error variable
-  node-id     ; 
-  node-links  ; list of links thats define its topological neigbours
+  node-error  ; error local del nodo
+  node-id     ; numero identificador del nodo
+  node-links  ; lista de links con los vecinos
+]
+
+GNG:edges-own [
+   edge-age ; edad de la arista
 ]
 
 to GNG:setup
   ask patches [set pcolor white]
   clear-turtles
   reset-ticks
+  resize-world 0 100 0 100
+  set-patch-size 5
   set node-count 0
   
-  GNG:crear-nodo (list 0 0) red ; Creacion del nodo central (que define la estructura)
+  set ew 0.05 
+  set en 0.0006
   ;------ Creacion de la nube de puntos -------
   ; (Crear un metodo que haga esto para una lista de puntos en un csv
-  repeat 10 [ GNG:crear-nodo (list ((random (2 * max-pxcor)) - max-pxcor) ((random (2 * max-pycor)) - max-pycor)) black ]
+  repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
+  ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
+  repeat 3 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) green ]
+  create-turtles 1 [
+    set xcor 0
+    ;print xcor
+    set ycor 0
+    set color red
+    set shape "circle"
+    set size 2
+    set label "x"
+  ]
+  set x-node turtles with [label = "x"]
+  GNG:edge-to 0 1
+  GNG:edge-to 0 2
+  GNG:edge-to 1 2 
+  ; Utilizar el metodo /GNG:edge-to n1 n2/
+end
+
+to GNG:step
+  ; Se establece el vector de entrada
+  let nuevo-x one-of patches with[pcolor = black]
+  ask x-node [
+    set xcor [pxcor] of nuevo-x
+    set ycor [pycor] of nuevo-x
+  ]
+  ; Se obtienen los nodos s y t mas cercanos al nodo 0
+  let ws GNG:nearest
+  let wt GNG:nearest-except ws
+  ; Se actualiza el error del nodo s
+  let newerror (GNG:distancia x-node GNG:nodes with [node-id = ws]) ^ 2
+  ask GNG:nodes with [node-id = ws] [set node-error node-error + newerror]
+  ; Se mueve s y los vecinos dependiendo de la distancia a x-node
+  GNG:move-node ws
   
-  ;---------------------------
+  ;queda añadir el particionado, creacion y destruccion de links
+  tick
+end
+
+to-report GNG:nearest ; Devuelve el id del nodo mas cercano a n1
+  let nearest-id -1
+  let nodos sort GNG:nodes
+  let distancias map [n -> GNG:distancia x-node n] nodos
+  let minima min distancias
   
-  ask GNG:nodes with [node-id mod 2 = 0 and not (node-id = 0)] [
-    ask GNG:nodes with [node-id = [node-id] of myself - 1] [
-      create-link-with myself
-      show link-with myself
+  ;let n (item (position minima distancias) nodos)
+  
+  report [node-id] of (item (position minima distancias) nodos)
+end
+
+to-report GNG:nearest-except [n1] ; Devuelve el id del nodo mas cercano a /n1/ excluyendo los id de la lista /as/ (agentset)
+  let nearest-id -1
+  let nodos sort GNG:nodes with [not (node-id = n1)]
+  let distancias map [n -> GNG:distancia x-node n] nodos
+  let minima min distancias
+  report [node-id] of (item (position minima distancias) nodos)
+end
+
+to GNG:move-node [id] ; Mover s y sus vecinos ; con ew y en entre 0 y 1
+  let n GNG:nodes with [node-id = id] ; nodo con node-id = id
+  let v1 (list [xcor] of x-node [ycor] of x-node) ; posicion de x-node
+  let v2 (list [xcor] of n [ycor] of n) ; posicion de n
+  let vdist GNG:vector-substract v1 v2 ; se obtiene la diferencia x - ws
+  ask n [
+    set xcor (xcor + (ew * first vdist))
+    set ycor (ycor + (ew * last vdist))
+    
+    ask link-neighbors [
+      set v2 (list xcor ycor) ; posicion de vecinos de n
+      set vdist GNG:vector-substract v1 v2 ; se obtiene la diferencia x - wn
+      set xcor (xcor + (en * first vdist))
+      set ycor (ycor + (en * last vdist))
     ]
   ]
-  
-  print node-count
-end
-
-to-report GNG:module2D [vector] ; Calcula el modulo de un vector 2D
-  GNG:check vector
-  
-  report sqrt ((first vector) ^ 2 + (last vector) ^ 2)
-end
-
-to-report GNG:vector-substract [vector1  vector2] ; Calculor de la diferencia: v1 - v2
-  GNG:check vector1
-  GNG:check vector2
-  
-  report (list (first vector1 - first vector2) (last vector1 - last vector2))
-end
-
-to-report GNG:nearest-to [n1] ; Devuelve el id del nodo mas cercano a n1
-  let nearest-id -1
-  ask GNG:nodes with [node-id = n1] [
-    let minima min [distance myself] of GNG:nodes with [not (node-id = n1)]
-    ask GNG:nodes with [distance myself = minima] [set nearest-id node-id]
-    ;print (word "minimo id: " nearest-id)
-  ]
-  report nearest-id
-end
-
-to GNG:check [vector] ; Checkea si un vector es bidimensional
-  if length vector != 2 [print (word "Error in /GNG:check/ parameters: " vector)] ; Check vector is 2D vector
 end
 
 to GNG:crear-nodo [vector ncolor] ; Crea un GNG:node especificando el vector de posicion y el color con ncolor
-  GNG:check vector
+  let v GNG:check vector
   create-GNG:nodes 1 [
-    set xcor first vector
+    set xcor first v
     ;print xcor
-    set ycor last vector
+    set ycor last v
     set node-error 0.0
     set color ncolor
     set shape "circle"
+    set size 2
     set node-id node-count
     set label node-id
     set node-count node-count + 1
     set node-links (list)
   ]
 end
+
+to GNG:edge-to [n1 n2]
+  ask GNG:nodes with [node-id = n1] [
+    ask GNG:nodes with [node-id = n2] [
+      create-link-with myself
+      set node-links insert-item 0 node-links n1
+    ]
+    set node-links insert-item 0 node-links n2
+  ]
+end
+
+; Metodos matematicos 
+to-report GNG:distancia [t1 t2] ;obtiene la distancia entre dos nodos
+  let v1 (list (first [xcor] of t1) (first [ycor] of t1)) ;este corresponde a x-node
+  let v2 (list ([xcor] of t2) ([ycor] of t2)) ;este es el nodo que se quiere medir
+  
+  report GNG:module2D GNG:vector-substract v1 v2
+end
+
+to-report GNG:module2D [vector] ; Calcula el modulo de un vector 2D
+  let v GNG:check vector
+  
+  report sqrt ((first v) ^ 2 + (last v) ^ 2)
+end
+
+to-report GNG:vector-substract [vector1  vector2] ; Calculor de la diferencia: v1 - v2
+  let v1 GNG:check vector1
+  let v2 GNG:check vector2
+  
+  report (list ((first v1) - (first v2)) ((last v1) - (last v2)))
+end
+
+to-report GNG:check [vector] ; Checkea si un vector es bidimensional
+  if length vector != 2 [print (word "Error in /GNG:check/ parameters: " vector)] ; Check vector is 2D vector
+  report reduce sentence vector
+end
+
