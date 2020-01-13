@@ -4,8 +4,8 @@ breed [data datum]
 breed [centers center]
 
 data-own [
-  class
   connect
+  node-error
 ]
 centers-own [
   moved?
@@ -45,12 +45,9 @@ end
 to-report load [f]
   ; Read dataset
   let files csv:from-file f
-
-  ;quitamos la cabecera
-  set files remove-item 0 files
-
   ;Normalize and transform output
   set files shuffle bf files
+  ;set files remove-item 0 files
   report files
 end
 
@@ -60,10 +57,9 @@ to setup-file
   foreach load Ejemplo  [x ->
     create-data 1 [
     setxy (item 0 x) (item 1 x)
-    set connect -1
-    if (item 2 x) = 0 [create-link-to datum item 2 x [set color red] set connect item 2 x]
     set size 1
     set shape "dot"
+    set node-error 0.0
     set color black ]
   ]
 
@@ -71,19 +67,15 @@ to setup-file
 ;    create-data 1 [
 ;    setxy ((item 0 x) + random-entre-dos 3 -3) ((item 1 x) + random-entre-dos 3 -3)
 ;    set size 1
-;
 ;    set shape "dot"
 ;    set color black ]
 ;  ]
 end
 
 to save-to-file
-;  foreach sort data [x ->
-;    ask x [ask my-out-links[show end2]]
-;  ]
-;  ask links
-;[ show end2 ]
-  csv:to-file "datasave.data" [ (list round xcor round ycor connect) ] of data
+  let fileData [ (list round xcor round ycor) ] of data
+  set fileData fput ["x" "y"] fileData
+  csv:to-file "datasave.data" fileData
 end
 
 to-report random-entre-dos [ a b ]
@@ -126,7 +118,7 @@ Num-Data
 Num-Data
 0
 10000
-600.0
+0.0
 100
 1
 NIL
