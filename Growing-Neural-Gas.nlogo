@@ -45,6 +45,7 @@ end
 to-report load [f]
   ; Read dataset
   let files csv:from-file f
+  set files remove-duplicates files
   ;Normalize and transform output
   set files shuffle bf files
   ;set files remove-item 0 files
@@ -63,13 +64,13 @@ to setup-file
     set color black ]
   ]
 
-;  foreach load Ejemplo  [x ->
-;    create-data 1 [
-;    setxy ((item 0 x) + random-entre-dos 3 -3) ((item 1 x) + random-entre-dos 3 -3)
-;    set size 1
-;    set shape "dot"
-;    set color black ]
-;  ]
+  foreach load Ejemplo  [x ->
+    create-data 1 [
+    setxy ((item 0 x) + random-entre-dos 2 -2) ((item 1 x) + random-entre-dos 2 -2)
+    set size 1
+    set shape "dot"
+    set color black ]
+  ]
 end
 
 to save-to-file
