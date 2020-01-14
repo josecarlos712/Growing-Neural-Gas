@@ -47,6 +47,7 @@ end
 
 to GNG:step
   ; Se establece el vector de entrada
+  if (node-count - 1) >= max-node-count [ stop ]
   let nuevo-x one-of patches with[pcolor = black]
   ask x-node [
     set xcor [pxcor] of nuevo-x
@@ -63,6 +64,15 @@ to GNG:step
   ; Se actualiza la edad de los links de s
   ; Los links cuya edad supere alimit se borran
   ask GNG:nodes with [node-id = ws] [
+    ; Si existe el link entre s y t, su edad se resetea
+    ;print (word "me: " one-of GNG:nodes with [node-id = ws] " elem: " one-of GNG:nodes with [node-id = wt] " lista" [node-id] of GNG:edge-neighbors)
+    ifelse member? wt [node-id] of GNG:edge-neighbors [
+      ;show (word "arista " (GNG:edge ws wt))
+      ask GNG:edge GNG:who ws GNG:who wt [set edge-age 0]
+    ]
+    ; Si no existe el link entre s y t se crea uno 
+    [ GNG:edge-to ws wt ]
+    
     ask my-GNG:edges [
       set edge-age edge-age + 1
       ; si la edad del link es mayor a alimit, este muere
@@ -70,15 +80,6 @@ to GNG:step
         die 
       ]
     ]
-    
-    ; Si existe el link entre s y t, su edad se resetea
-    ;print (word "me: " one-of GNG:nodes with [node-id = ws] " elem: " one-of GNG:nodes with [node-id = wt] " lista" [node-id] of GNG:edge-neighbors)
-    ifelse member? GNG:who wt [node-id] of GNG:edge-neighbors [
-      ;show (word "arista " (GNG:edge ws wt))
-      ask GNG:edge GNG:who ws GNG:who wt [set edge-age 0]
-    ]
-    ; Si no existe el link entre s y t se crea uno 
-    [ GNG:edge-to ws wt ]
   ]
   ; Si algun nodo se ha quedado sin links, muere
   ask GNG:nodes with [count GNG:edge-neighbors = 0] [ die ]
@@ -93,17 +94,16 @@ to GNG:step
   let v 0
   ask u [ set v one-of GNG:edge-neighbors with [node-error = max errors] ]
   ; Se crea r en el punto medio de u y v si no se ha alcanzado el limite de nodos
-  if ticks mod lambda = 0 and ticks < max-node-count [
+  if (ticks mod lambda = 0) and node-count < max-node-count [
     let posu GNG:check (list [xcor] of u [ycor] of u)
     let posv GNG:check (list [xcor] of v [ycor] of v)
     let newr (list round ((first posu + first posv) / 2) ;xcor
       round ((last posu + last posv) / 2)) ;ycor ; v + u / 2
     GNG:crear-nodo newr ; se crea el nodo r
     let r one-of GNG:nodes with [xcor = first newr and ycor = last newr]  ; almacenar en r el nodo r
-    print (word "nodo" r)
     GNG:edge-to [node-id] of u [node-id] of r ; se crea link u r
     GNG:edge-to [node-id] of v [node-id] of r ; se crea link v r
-    ask GNG:edge [node-id] of u [node-id] of v [ die ] ; se elimina link u v
+    ask GNG:edge GNG:who [node-id] of u GNG:who [node-id] of v [ die ] ; se elimina link u v
     ; Se aplican nuevos errores para u, v y r
     ask u [ set node-error alpha * node-error]
     ask v [ set node-error alpha * node-error]
