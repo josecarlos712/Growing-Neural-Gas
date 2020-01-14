@@ -77,8 +77,8 @@ SLIDER
 63
 196
 96
-alfa
-alfa
+alpha
+alpha
 0
 1
 0.5
@@ -137,8 +137,8 @@ SLIDER
 336
 198
 369
-lamda
-lamda
+lambda
+lambda
 200
 2000
 800.0
@@ -156,7 +156,7 @@ max-node-count
 max-node-count
 10
 500
-120.0
+127.0
 1
 1
 NIL
