@@ -15,18 +15,18 @@ centers-own [
 
 to setup-data2 [n]
   ca
+  GNG:setup
   ask patches [set pcolor white]
   let bags 1 + random dispersion
   create-data bags [
     setxy random-xcor random-ycor
     set size 1
     set shape "dot"
-    set color black ]
+    set color grey ]
   repeat n - bags
   [
     ask one-of data
     [hatch-data 1 [set heading random 360 fd random-float 5]]]
-  GNG:setup
 end
 
 
@@ -42,6 +42,7 @@ end
 
 to setup-file
   ca
+  GNG:setup
   ask patches [set pcolor white]
   foreach load word "Ejemplos\\" Ejemplo  [x ->
     create-data 1 [
@@ -49,9 +50,9 @@ to setup-file
     set size 1
     set shape "dot"
     set node-error 0.0
-    set color black ]
+    set color grey ]
   ]
-  GNG:setup
+
 ;  foreach load Ejemplo  [x ->
 ;    create-data 1 [
 ;    setxy ((item 0 x) + random-entre-dos 2 -2) ((item 1 x) + random-entre-dos 2 -2)
@@ -107,7 +108,7 @@ Num-Data
 Num-Data
 0
 10000
-3300.0
+8300.0
 100
 1
 NIL
@@ -139,7 +140,7 @@ Dispersion
 Dispersion
 0
 100
-22.0
+61.0
 1
 1
 NIL
@@ -303,7 +304,7 @@ alimit
 alimit
 20
 200
-120.0
+100.0
 1
 1
 NIL
@@ -318,7 +319,7 @@ max-node-count
 max-node-count
 10
 500
-150.0
+166.0
 1
 1
 NIL

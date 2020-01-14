@@ -17,11 +17,11 @@ GNG:edges-own [
 
 to GNG:setup
 ;  ask patches [set pcolor white]
-;  clear-turtles
-;  reset-ticks
+  clear-turtles
+  reset-ticks
 ;  resize-world 0 100 0 100
 ;  set-patch-size 5
-;  set node-count 0
+  set node-count 0
 ;  
 ;  set ew 0.05 
 ;  set en 0.0006
@@ -29,7 +29,7 @@ to GNG:setup
 ;  ; (Crear un metodo que haga esto para una lista de puntos en un csv
 ;  repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
 ;  ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
- print "e"
+  set x-node [0 0]
   repeat 2 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) ]
   create-turtles 1 [
     set xcor 0
@@ -48,7 +48,7 @@ end
 to GNG:step
   ; Se establece el vector de entrada
   if (node-count - 1) >= max-node-count [ stop ]
-  let nuevo-x one-of patches with[pcolor = black]
+  let nuevo-x one-of data with[color = grey]
   ask x-node [
     set xcor [pxcor] of nuevo-x
     set ycor [pycor] of nuevo-x
@@ -158,7 +158,7 @@ to GNG:crear-nodo [vector] ; Crea un GNG:node especificando el vector de posicio
     ;print xcor
     set ycor round last v
     set node-error 0.0
-    set color green
+    set color red
     set shape "circle"
     set size 2
     set node-id node-count
