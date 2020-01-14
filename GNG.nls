@@ -16,19 +16,20 @@ GNG:edges-own [
 ]
 
 to GNG:setup
-  ask patches [set pcolor white]
-  clear-turtles
-  reset-ticks
-  resize-world 0 100 0 100
-  set-patch-size 5
-  set node-count 0
-  
-  set ew 0.05 
-  set en 0.0006
-  ;------ Creacion de la nube de puntos -------
-  ; (Crear un metodo que haga esto para una lista de puntos en un csv
-  repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
-  ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
+;  ask patches [set pcolor white]
+;  clear-turtles
+;  reset-ticks
+;  resize-world 0 100 0 100
+;  set-patch-size 5
+;  set node-count 0
+;  
+;  set ew 0.05 
+;  set en 0.0006
+;  ;------ Creacion de la nube de puntos -------
+;  ; (Crear un metodo que haga esto para una lista de puntos en un csv
+;  repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
+;  ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
+ print "e"
   repeat 2 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) ]
   create-turtles 1 [
     set xcor 0

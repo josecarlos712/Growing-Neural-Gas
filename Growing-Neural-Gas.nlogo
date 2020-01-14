@@ -26,6 +26,7 @@ to setup-data2 [n]
   [
     ask one-of data
     [hatch-data 1 [set heading random 360 fd random-float 5]]]
+  GNG:setup
 end
 
 
@@ -42,7 +43,7 @@ end
 to setup-file
   ca
   ask patches [set pcolor white]
-  foreach load Ejemplo  [x ->
+  foreach load word "Ejemplos\\" Ejemplo  [x ->
     create-data 1 [
     setxy (item 0 x) (item 1 x)
     set size 1
@@ -50,7 +51,7 @@ to setup-file
     set node-error 0.0
     set color black ]
   ]
-
+  GNG:setup
 ;  foreach load Ejemplo  [x ->
 ;    create-data 1 [
 ;    setxy ((item 0 x) + random-entre-dos 2 -2) ((item 1 x) + random-entre-dos 2 -2)
@@ -167,12 +168,12 @@ Desde Ejemplo:
 CHOOSER
 11
 143
-149
+192
 188
 Ejemplo
 Ejemplo
-"resolve.data" "cometa.data" "datasave.data"
-2
+"martillo.data" "cometa.data" "escudo.data" "manzana.data"
+3
 
 BUTTON
 10
