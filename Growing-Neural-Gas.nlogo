@@ -1,6 +1,6 @@
 extensions [CSV]
 
-;__includes ["GNG.nls"]
+__includes ["GNG.nls"]
 
 breed [data datum]
 breed [centers center]
