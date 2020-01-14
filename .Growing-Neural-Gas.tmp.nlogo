@@ -97,6 +97,23 @@ GRAPHICS-WINDOW
 ticks
 30.0
 
+BUTTON
+0
+0
+0
+0
+NIL
+NIL
+NIL
+1
+T
+OBSERVER
+NIL
+NIL
+NIL
+NIL
+1
+
 SLIDER
 13
 31
@@ -322,23 +339,6 @@ max-node-count
 1
 NIL
 HORIZONTAL
-
-BUTTON
-329
-374
-392
-407
-Run
-GNG:step
-T
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
 
 @#$#@#$#@
 ## WHAT IS IT?
