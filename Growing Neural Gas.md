@@ -4,7 +4,7 @@ El **GNG** ( Growing Neural Gas) es un algoritmo de clustering (Agrupación en e
 
 los algoritmos de clustering son algoritmos que agrupan vectores de datos en clústeres donde los vectores del mismo clúster son similares entre si.
 
-<img src=".\images\CC.png" style="zoom: 80%;" />
+<img src=".\images\CC.png" style="zoom: 45%;" />
 
 
 
@@ -332,11 +332,11 @@ Lambda muy grande
 
 * **Alpha** y **Beta**
 
-  Ambos son parámetros que deciden la velocidad de decremento de los errores,por lo que no notamos ningún cambio muy significativo al aumentarlos o decrementarlos.
+  Ambos son parámetros que deciden la velocidad de decremento de los errores,y al ejecutarlo modificado sobre nuestros ejemplo no podemos apreciar ningún cambio significativo.
 
 * **A_limit**
 
-Se supone que es el limite de edad que tienen las aristas pero al correr no notamos cambio alguno.
+Esto limita  la edad que pueden alcanzar las aristas,puede que otros modelos se aprecie,sin embargo nosotros con nuestros ejemplos de prueba no notamos diferencia alguna.
 
 * **E w**
 
