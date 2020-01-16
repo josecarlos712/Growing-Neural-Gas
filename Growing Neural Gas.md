@@ -1,35 +1,56 @@
-                                            Growing Neural Gas
+#                           Growing Neural Gas
 
-El growing neural gas es un algoritmo de clusterización, lo cual consiste en agrupar una base de  datos en  una serie de nodos que tengan similitudes a la base de datos,  logrando de esta forma poder sacar un patrón en un grupo de datos.
+El **GNG** ( Growing Neural Gas) es un algoritmo de clustering (Agrupación en español),
 
-<img src=".\images\martillo.png" style="zoom: 85%;" />
+los algoritmos de clustering son algoritmos que agrupan vectores de datos en clústeres donde los vectores del mismo clúster son similares entre si.
 
-
-
-En las imágenes podemos observar la nube de datos en gris,mientras los nodos están en rojo.
+<img src=".\images\CC.png" style="zoom: 80%;" />
 
 
 
-<img src=".\images\manzana.png" style="zoom: 85%;" />
+Este es un ejemplo de clustering agrupando los vectores (Cuadrados) en clústeres, donde cada clúster posee los cuadrados mas cercanos (Mismo color).
+
+### Explicación Algoritmo
+
+Antes de explicar en que consiste el algoritmo explicare 2 conceptos:
+
+* Diagrama de Voronoid: Dado un conjunto de nodos ,delimitamos el área en grupos (colores) donde cada color representa los datos con un nodo común (El mas cercano), quedando así las fronteras entre colores (Aristas de Voronoid)  los puntos que equidistan de dos o mas nodos.
+
+<img src=".\images\vor.png" style="zoom: 30%;" />
 
 
 
-## Explicación Algoritmo
+* Triangulación de Voronoid: Conectar mediante aristas los nodos que comparten Aristas de Voronoid.
 
-Usaremos nodos k los cuales contiene a  un vector de posición  W (en netlogo usaremos las coordenadas de la tortuga),una lista con los vecinos de un nodo (Como netlogo permite trabajar con grafos no necesitaremos esto), una variable de error y para facilitarnos la tareas un id de nodo
+<img src=".\images\vor2.png" style="zoom: 30%;" />
 
-Como inicio para el algoritmo generamos 2 nodos iniciales y los unimos entre si con una arista que ponderaremos con una variable llamada edad.
 
-El bucle del algoritmo comienza generando un punto de referencia x que tendrá las coordenadas de algún dato de la nube de datos.
 
-Después localizamos los 2 nodos más cercanos a x (s y t).
 
-Al error de s lo modificamos así
+
+Este algoritmo creara nodos que representan los clústeres de datos y aristas que indicaran la vecindad de  dichos nodos.
+
+Cada uno de estos nodos su propio vector de referencia o posición **W** , además de un valor interno que denominaremos error.
+
+Además estos nodos estarán unidos por aristas ponderadas cuyo peso será llamado edad de la arista.
+
+
+
+### Pseudo Código
+
+**Inicialización del algoritmo:** Se genera 2 nodos 
+
+* Generamos un vector de referencia **X** sacando su posición de una Base de datos.
+
+* Localizamos los nodos **S** y **T**, siendo estos mismos los nodos mas cercanos a **X**
+* Modificamos el error del  nodo ganador  **S** mediante esta función.
+
+
 
 $$
 {Error}_s <- {Error}_s + {||{W}_s-x||}^2
 $$
-Movemos s y sus nodos conexos con la siguiente ecuación:
+* Movemos **S** y sus nodos conexos con la siguiente función,siendo **N** los nodos vecinos de **S** y **e** dos variables que el usuario parametriza entre 0 y 1.
 
 
 $$
@@ -40,21 +61,17 @@ $$
 {W}_n ← {W}_n + {e}_n (x-{W}_n)
 $$
 
+ 
 
+* Incrementamos la edad de las aristas entre **S** y sus vecinos.
 
- Siendo n los  nodos vecinos de S  y las e variables definidas con un valor decidido por la persona.
+* Si **S** y **T** no son conexos,se crea una arista de edad 0 entre ellos.
 
-Posteriormente incrementamos la edad de las aristas entre s y sus vecinos.
+* Se comprueba que no existe ninguna arista con una edad superior a la marcada por el parámetro **A_max_limit**, si se diera ese caso se eliminaría esa arista, comprobando que no si al hacerlo se queda un nodo sin conectar,ese nodo será borrado.
 
-Si s y t no están conectados se conectan mediante una arista ponderada.
+* Si la iteración es múltiplo del parámetro **Lambda**  y además el numero de nodos no supera a **max-node-counts**  se busca el nodo **U** con el mayor error y el nodo **V** que es el nodo vecino a **U** con mayor error, insertamos un nuevo nodo **R** cuyo vector de referencia sea la media posición entre **U** y **V** , sucesivamente borramos la arista entre **U** y **V**  y conectamos **U** con **R**  y **R**  con **V**  mediante aristas.
 
-Ahora buscamos si existe una arista con edad mayor a a_limit, si es así se borra por lo que si al hacer eso queda un nodo desconectado él mismo es borrado.
-
-Si la iteración es múltiplo de lambda y además el numero de nodos no es  mayor al establecido por max-node-counts realiza los siguiente:
-
-Se busca el nodo u con el mayor error y el nodo v que es el nodo vecino a v con mayor error, insertamos entre u y v un nodo r cuyo vector de referencia sea la media posición entre u y v, sucesivamente borramos la arista entre u y v y conectamos u con r y r con v mediante aristas.
-
-Sucesivamente reestablecemos los errores de u, v y r siguiendo la siguiente asignación.
+* Modificamos los errores de **U**,  **V** y **R** siguiendo la siguiente asignación con un parámetro Alpha que nosotros escogemos.
 
 
 $$
@@ -69,27 +86,96 @@ $$
 { error}_r <-  { error}_u
 $$
 
-Siendo Alpha una variable que nosotros decidimos.
 
-Y así hasta que se cumpla un límite de parada establecido.
 
-Finalmente ajustamos todos los errores aplicando esta otra asignación.
 
- Con Beta otra variable ajustable.
+
+* Ajustamos los errores de los nodos j con el parámetro Beta
+
+
 
 
 $$
-{ error}_j <- {\beta} * { error}_j
+{ error}_j <--    { error}_j - {\beta} * { error}_j
 $$
 
 
-# Código y su explicación
+### Distribución y formato del código en netlogo
 
-Para este trabajo nosotros nos hemos decantado por crear una librería con el código de GNG,la cual será usada en el código,el cual contiene un par de funciones que nos sirven para cargar unos ficheros de datos que previamente hemos creado con distintas formas además de otro botón que genera una nube de datos aleatoria en función de de unos parámetros establecidos por nosotros como la cantidad de puntosa crear.
+Para este trabajo nosotros nos hemos decantado por crear una librería con el código de GNG,con  2 to do principales (setup y step).
 
-El botón de run llama a una función step de la librería principal que ejecuta el algoritmo
+* Este es el  setup que inicializa el paso 0 del algoritmo.
 
-Este es el step que equivale al algoritmo usando funciones externas creadas por nosotros.
+```
+to GNG:setup
+;  ask patches [set pcolor white]
+  clear-turtles
+  reset-ticks
+;  resize-world 0 100 0 100
+;  set-patch-size 5
+  set node-count 0
+;  
+;  set ew 0.05 
+;  set en 0.0006
+;  ;------ Creacion de la nube de puntos -------
+;  ; (Crear un metodo que haga esto para una lista de puntos en un csv
+;  repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
+;  ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
+  set x-node [0 0]
+  repeat 2 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) ]
+  create-turtles 1 [
+    set xcor 0
+    ;print xcor
+    set ycor 0
+    set color red
+    set shape "circle"
+    set size 2
+    set label "x"
+  ]
+  set x-node turtles with [label = "x"]
+  GNG:edge-to 0 1
+  ; Utilizar el metodo /GNG:edge-to n1 n2/
+end
+
+ 
+```
+
+```
+
+to GNG:setup
+;  ask patches [set pcolor white]
+  clear-turtles
+  reset-ticks
+;  resize-world 0 100 0 100
+;  set-patch-size 5
+  set node-count 0
+;  
+;  set ew 0.05 
+;  set en 0.0006
+;  ;------ Creacion de la nube de puntos -------
+;  ; (Crear un metodo que haga esto para una lista de puntos en un csv
+;  repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
+;  ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
+  set x-node [0 0]
+  repeat 2 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) ]
+  create-turtles 1 [
+    set xcor 0
+    ;print xcor
+    set ycor 0
+    set color red
+    set shape "circle"
+    set size 2
+    set label "x"
+  ]
+  set x-node turtles with [label = "x"]
+  GNG:edge-to 0 1
+  ; Utilizar el metodo /GNG:edge-to n1 n2/
+end
+```
+
+
+
+* Este es el step que equivale al algoritmo previamente explicado usando funciones externas creadas por nosotros.
 
 ~~~netlogo
 ``` [netlogo
@@ -164,11 +250,75 @@ end
 ```
 ~~~
 
-## Conclusiones:
+Todo este código es llamado en nuestro método principal, la cual tiene 2 métodos de creación de bases de datos.
 
-Para concluir este código me gustaría hacer algunas demostraciones sobre lo que modifica los valores de ciertos parámetros.
+* Generación aleatoria
 
-Lambda muy pequeño.
+  ```
+  to setup-data2 [n]
+    ca
+    GNG:setup
+    ask patches [set pcolor white]
+    let bags 1 + random dispersion
+    create-data bags [
+      setxy random-xcor random-ycor
+      set size 1
+      set shape "dot"
+      set color grey ]
+    repeat n - bags
+    [
+      ask one-of data
+      [hatch-data 1 [set heading random 360 fd random-float 5]]]
+  end
+  ```
+
+* Mediante carga de un fichero externo con las coordenadas de los datos en formato **CSV** aprovechando la extensión homónima:
+
+  ```
+  to-report load [f]
+    ; Read dataset
+    let files csv:from-file f
+    set files remove-duplicates files
+    ;Normalize and transform output
+    set files shuffle bf files
+    ;set files remove-item 0 files
+    report files
+  end
+  
+  to setup-file
+    ca
+    GNG:setup
+    ask patches [set pcolor white]
+    foreach load word "Ejemplos\\" Ejemplo  [x ->
+      create-data 1 [
+      setxy (item 0 x) (item 1 x)
+      set size 1
+      set shape "dot"
+      set node-error 0.0
+      set color grey ]
+    ]
+  
+  ```
+
+  
+
+Finalmente colocamos un botón continuo que llame al step de la librería para correr el algoritmo.
+
+
+
+
+
+### Juego de Parámetros
+
+Nos gustaría finalizar este trabajo hablando sobre los efectos que tienen los parámetros sobre el algoritmo
+
+* **Lambda**
+
+  Como podemos observar en las graficas, lambda es un regulador de velocidad de creación de nodos. 
+
+  Ya que solo se puede crear nodos cuando el contador del algoritmo sea múltiplo, si se ponen un numero muy grande tiene que pasar mucho rato entre la creación de nuevos nodos.
+
+  Lambda muy pequeño.
 
 
 
@@ -180,5 +330,40 @@ Lambda muy grande
 
 <img src=".\images\L1.png" style="zoom: 85%;" />
 
-Aquí podemos comprobar que lambda es el parámetro que ajusta la velocidad de creación de nodos.
+* **Alpha** y **Beta**
 
+  Ambos son parámetros que deciden la velocidad de decremento de los errores,por lo que no notamos ningún cambio muy significativo al aumentarlos o decrementarlos.
+
+* **A_limit**
+
+Se supone que es el limite de edad que tienen las aristas pero al correr no notamos cambio alguno.
+
+* **E w**
+
+  Al incrementar este parámetro podemos observar como los nodos se mueven mucho mas ya que este parámetro es el que indica cuanto han de moverse los nodos seleccionados.
+
+  ### Ejemplo finales
+
+  Ejemplo aleatorio
+
+  <img src=".\images\C3.png" style="zoom: 85%;" />
+
+  Manzana:
+
+  
+
+  <img src=".\images\manzana.png" style="zoom: 85%;" />
+
+  Martillo:
+
+  
+
+  <img src=".\images\martillo.png" style="zoom: 85%;" />
+
+  Cometa:
+
+  <img src=".\images\C1.png" style="zoom: 85%;" />
+
+  Escudo:
+
+  <img src=".\images\C2.png" style="zoom: 85%;" />
