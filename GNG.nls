@@ -1,4 +1,9 @@
 breed [GNG:nodes GNG:node]
+
+;Familia para guardar el dibujo al que se debe adaptar
+breed [data datum]
+
+
 undirected-link-breed [GNG:edges GNG:edge]
 
 globals [node-count x-node] ;ew en alimit max-node-count lambda
@@ -16,20 +21,12 @@ GNG:edges-own [
 ]
 
 to GNG:setup
-;  ask patches [set pcolor white]
   clear-turtles
   reset-ticks
-;  resize-world 0 100 0 100
-;  set-patch-size 5
   set node-count 0
-;  
-;  set ew 0.05 
-;  set en 0.0006
-;  ;------ Creacion de la nube de puntos -------
-;  ; (Crear un metodo que haga esto para una lista de puntos en un csv
-;  repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
-;  ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
+
   set x-node [0 0]
+  ;Creamos los dos nodos de partida de forma aleatoria
   repeat 2 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) ]
   create-turtles 1 [
     set xcor 0
@@ -41,6 +38,7 @@ to GNG:setup
     set label "x"
   ]
   set x-node turtles with [label = "x"]
+  ;Creamos la arista que une los dos primeros nodos
   GNG:edge-to 0 1
   ; Utilizar el metodo /GNG:edge-to n1 n2/
 end
@@ -48,50 +46,41 @@ end
 to GNG:step
   ; Se establece el vector de entrada
   if (node-count - 1) >= max-node-count [ stop ]
+  
   let nuevo-x one-of data with[color = grey]
   ask x-node [
     set xcor [pxcor] of nuevo-x
     set ycor [pycor] of nuevo-x
   ]
+  
   ; Se obtienen los nodos s y t mas cercanos al nodo 0
   let ws GNG:nearest
   let wt GNG:nearest-except ws
+  
   ; Se actualiza el error del nodo s
-  let newerror (GNG:distancia x-node GNG:nodes with [node-id = ws]) ^ 2
-  ask GNG:nodes with [node-id = ws] [set node-error node-error + newerror]
+  GNG:update-error ws
+  
   ; Se mueve s y los vecinos dependiendo de la distancia a x-node
   GNG:move-node ws
+  
   ; Se actualiza la edad de los links de s
   ; Los links cuya edad supere alimit se borran
-  ask GNG:nodes with [node-id = ws] [
-    ; Si existe el link entre s y t, su edad se resetea
-    ;print (word "me: " one-of GNG:nodes with [node-id = ws] " elem: " one-of GNG:nodes with [node-id = wt] " lista" [node-id] of GNG:edge-neighbors)
-    ifelse member? wt [node-id] of GNG:edge-neighbors [
-      ;show (word "arista " (GNG:edge ws wt))
-      ask GNG:edge GNG:who ws GNG:who wt [set edge-age 0]
-    ]
-    ; Si no existe el link entre s y t se crea uno 
-    [ GNG:edge-to ws wt ]
-    
-    ask my-GNG:edges [
-      set edge-age edge-age + 1
-      ; si la edad del link es mayor a alimit, este muere
-      if edge-age >= alimit [
-        die 
-      ]
-    ]
-  ]
+  GNG:update-link ws wt
+  
   ; Si algun nodo se ha quedado sin links, muere
   ask GNG:nodes with [count GNG:edge-neighbors = 0] [ die ]
+  
   ; Si la iteracion actual es multiplo de lambda, se crea un nuevo nodo r
   ; Sea u el nodo con mayor error
   let nlist sort GNG:nodes
   let errors map [n -> [node-error] of n] nlist
   let u one-of GNG:nodes with [node-error = max errors]
+  
   ; Sea v el vecino de u con mayor error
-  ask u [ set nlist sort GNG:edge-neighbors ]
-  set errors map [n -> [node-error] of n] nlist
   let v 0
+  set errors map [n -> [node-error] of n] nlist
+  ask u [ set nlist sort GNG:edge-neighbors ]
+  
   ask u [ set v one-of GNG:edge-neighbors with [node-error = max errors] ]
   ; Se crea r en el punto medio de u y v si no se ha alcanzado el limite de nodos
   if (ticks mod lambda = 0) and node-count < max-node-count [
@@ -204,4 +193,33 @@ end
 
 to-report GNG:who [t]
   report ([who] of one-of GNG:nodes with [node-id = t])
+end
+
+to GNG:update-error [id-node]
+  let newerror (GNG:distancia x-node GNG:nodes with [node-id = id-node]) ^ 2
+  ask GNG:nodes with [node-id = id-node] [set node-error node-error + newerror]
+end
+
+to GNG:update-link [ws wt]
+  ask GNG:nodes with [node-id = ws] [
+    ; Si existe el link entre s y t, su edad se resetea
+    ;print (word "me: " one-of GNG:nodes with [node-id = ws] " elem: " one-of GNG:nodes with [node-id = wt] " lista" [node-id] of GNG:edge-neighbors)
+    ifelse member? wt [node-id] of GNG:edge-neighbors [
+      ;show (word "arista " (GNG:edge ws wt))
+      ask GNG:edge GNG:who ws GNG:who wt [set edge-age 0]
+    ]
+    ; Si no existe el link entre s y t se crea uno 
+    [ GNG:edge-to ws wt ]
+    GNG:update-age-edges
+  ]
+end
+
+to GNG:update-age-edges
+  ask my-GNG:edges [
+      set edge-age edge-age + 1
+      ; si la edad del link es mayor a alimit, este muere
+      if edge-age >= alimit [
+        die 
+      ]
+    ]
 end

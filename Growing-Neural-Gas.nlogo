@@ -2,75 +2,59 @@ extensions [CSV]
 
 __includes ["GNG.nls"]
 
-breed [data datum]
-breed [centers center]
-
-data-own [
-  connect
-  node-error
-]
-centers-own [
-  moved?
-]
-
-to setup-data2 [n]
-  ca
+;n : num-data
+to setup-data [n]
   GNG:setup
-  ask patches [set pcolor white]
+  ask patches
+  [ set pcolor white ]
   let bags 1 + random dispersion
-  create-data bags [
+  create-data bags
+  [
     setxy random-xcor random-ycor
     set size 1
     set shape "dot"
-    set color grey ]
+    set color grey
+  ]
   repeat n - bags
   [
     ask one-of data
-    [hatch-data 1 [set heading random 360 fd random-float 5]]]
+    [
+      hatch-data 1
+      [ set heading random 360 fd random-float 5 ]
+    ]
+  ]
 end
 
-
+;f : Nombre fichero
 to-report load [f]
-  ; Read dataset
+  ; Leemos fichero
   let files csv:from-file f
+  ;Eliminamos duplicados
   set files remove-duplicates files
-  ;Normalize and transform output
-  set files shuffle bf files
-  ;set files remove-item 0 files
+  ;quitamos la cabecera del csv o .data
+  set files remove-item 0 files
   report files
 end
 
 to setup-file
   ca
   GNG:setup
-  ask patches [set pcolor white]
-  foreach load word "Ejemplos\\" Ejemplo  [x ->
-    create-data 1 [
-    setxy (item 0 x) (item 1 x)
-    set size 1
-    set shape "dot"
-    set node-error 0.0
-    set color grey ]
+  ask patches
+  [ set pcolor white ]
+  ;Cargamos los datos del fichero
+  ;-------- Creacion de la grid introducidos mediante el csv -------------------
+  foreach load word "Ejemplos\\" Ejemplo
+  [
+    x ->
+    create-data 1
+    [
+      setxy (item 0 x) (item 1 x)
+      set size 1
+      set shape "dot"
+      set color grey
+    ]
   ]
-
-;  foreach load Ejemplo  [x ->
-;    create-data 1 [
-;    setxy ((item 0 x) + random-entre-dos 2 -2) ((item 1 x) + random-entre-dos 2 -2)
-;    set size 1
-;    set shape "dot"
-;    set color black ]
-;  ]
 end
-
-to save-to-file
-  let fileData [ (list round xcor round ycor) ] of data
-  set fileData fput ["x" "y"] fileData
-  csv:to-file "datasave.data" fileData
-end
-
-;to-report random-entre-dos [ a b ]
-;    report a + random (b - a)
-;end
 @#$#@#$#@
 GRAPHICS-WINDOW
 433
@@ -120,7 +104,7 @@ BUTTON
 194
 100
 Crea Datos
-setup-data2 Num-data
+setup-data Num-data
 NIL
 1
 T
@@ -174,7 +158,7 @@ CHOOSER
 Ejemplo
 Ejemplo
 "martillo.data" "cometa.data" "escudo.data" "manzana.data"
-3
+0
 
 BUTTON
 10
@@ -183,23 +167,6 @@ BUTTON
 237
 Cargar de Fichero
 setup-file
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-11
-247
-143
-280
-Exportar a fichero
-save-to-file
 NIL
 1
 T
