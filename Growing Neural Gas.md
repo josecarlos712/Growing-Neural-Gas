@@ -1,56 +1,66 @@
 #                           Growing Neural Gas
 
-El **GNG** ( Growing Neural Gas) es un algoritmo de clustering (Agrupación en español),
+El **GNG** ( Growing Neural Gas) es un algoritmo de clustering,
 
-los algoritmos de clustering son algoritmos que agrupan vectores de datos en clústeres donde los vectores del mismo clúster son similares entre si.
+Un algoritmo de clustering puede ser descrito como un proceso de organización de una colección de vectores k-dimensionales en grupos cuyos miembros comparten características.
+
+El principal objetivo del clustering es reducir una gran cantidad de datos en bruto, en categorías con un numero reducido de componentes similares.
+
+Los algoritmos de clustering mas conocidos para tratar este tipo de problemas son K-medias, SOM y GNG
+
+En algunos casos no existe información suficiente para determinar a priori el numero de categorías se necesarias para agrupar la colección de vectores.
 
 <img src=".\images\CC.png" style="zoom: 45%;" />
 
 
 
-Este es un ejemplo de clustering agrupando los vectores (Cuadrados) en clústeres, donde cada clúster posee los cuadrados mas cercanos (Mismo color).
+Esto es un ejemplo de clustering agrupando los vectores (Cuadrados) en clústers, donde cada uno de ellos posee los cuadrados más cercanos (Mismo color).
 
-### Explicación Algoritmo
+GNG es un algoritmo que tiene parámetros constantes desde el principio y no necesita decidir un numero de categorías a priori.
 
-Antes de explicar en que consiste el algoritmo explicare 2 conceptos:
+El problema de determinar cuando GNG debe parar es ampliamente discutido.
 
-* Diagrama de Voronoid: Dado un conjunto de nodos ,delimitamos el área en grupos (colores) donde cada color representa los datos con un nodo común (El mas cercano), quedando así las fronteras entre colores (Aristas de Voronoid)  los puntos que equidistan de dos o mas nodos.
+### Introducción al algoritmo
+
+Antes de profundizar en el algoritmo explicaremos 2 conceptos :
+
+* Diagrama de Voronoid: Dado un conjunto de nodos, delimitamos el área en grupos (colores) donde cada color representa los datos con un nodo común (El mas cercano), quedando así las fronteras entre colores (aristas de Voronoid)  los puntos que equidistan de dos o mas nodos.
 
 <img src=".\images\vor.png" style="zoom: 30%;" />
 
 
 
-* Triangulación de Voronoid: Conectar mediante aristas los nodos que comparten Aristas de Voronoid.
+* Triangulación de Voronoid: Conectar mediante aristas los nodos que comparten aristas de Voronoid.
 
 <img src=".\images\vor2.png" style="zoom: 30%;" />
 
+Una vez aclarados estos conceptos, que nos ayudaran a entender el algoritmo GNG, procederemos con la introducción del mismo.
 
+GNG es un algoritmo adaptativo respecto al cambio lento de la distribución a lo largo del tiempo.
 
+Comenzando con 2 nodos adyacentes, el algoritmo construye un grafo, en el cual los nodos considerados vecinos (aquellos que comparten similitudes) van unidos por una arista.
 
+GNG utiliza parámetros constantes en el tiempo, por lo que no es necesario decidir un numero de nodos a priori, pues los nodos son añadidos durante la ejecución.
 
-Este algoritmo creara nodos que representan los clústeres de datos y aristas que indicaran la vecindad de  dichos nodos.
+La creación de nuevos nodos, cesa cuando un criterio definido por el usuario así lo decide o el tamaño de la red ha alcanzado su limite.
 
-Cada uno de estos nodos su propio vector de referencia o posición **W** , además de un valor interno que denominaremos error.
+Cada uno de estos nodos tiene su propio vector de referencia o posición **W** , además de un valor interno que denominaremos error.
 
-Además estos nodos estarán unidos por aristas ponderadas cuyo peso será llamado edad de la arista.
-
-
+Además estos nodos estarán unidos por aristas ponderadas cuyo peso será definido como la edad de la arista.
 
 ### Pseudo Código
 
-**Inicialización del algoritmo:** Se genera 2 nodos 
+**Inicialización del algoritmo:** Se generan 2 nodos adyacentes, con vector de posición aleatorio.
 
-* Generamos un vector de referencia **X** sacando su posición de una Base de datos.
+* Generamos un vector de referencia **X** seleccionando arbitrariamente uno de los vectores almacenados en la base de datos, que se mantendrá constante durante una iteración del algoritmo.
 
-* Localizamos los nodos **S** y **T**, siendo estos mismos los nodos mas cercanos a **X**
-* Modificamos el error del  nodo ganador  **S** mediante esta función.
-
-
+* Localizamos los nodos **S** y **T**, siendo estos mismos el primer y segundo nodos mas cercano a **X** respectivamente.
+* Actualizamos el error del nodo **S** adicionando la distancia al cuadrado entre **S** y el vector de referencia **X**.
 
 $$
-{Error}_s <- {Error}_s + {||{W}_s-x||}^2
+{Error}_s ← {Error}_s + {||{W}_s-x||}^2
 $$
-* Movemos **S** y sus nodos conexos con la siguiente función,siendo **N** los nodos vecinos de **S** y **e** dos variables que el usuario parametriza entre 0 y 1.
+* Movemos **S** y sus nodos vecinos mediante la siguiente función, siendo **n** los nodos vecinos de **S** y **ew** y **en** dos parámetros que el usuario define entre 0 y 1.
 
 
 $$
@@ -63,69 +73,58 @@ $$
 
  
 
-* Incrementamos la edad de las aristas entre **S** y sus vecinos.
-
-* Si **S** y **T** no son conexos,se crea una arista de edad 0 entre ellos.
-
-* Se comprueba que no existe ninguna arista con una edad superior a la marcada por el parámetro **A_max_limit**, si se diera ese caso se eliminaría esa arista, comprobando que no si al hacerlo se queda un nodo sin conectar,ese nodo será borrado.
-
-* Si la iteración es múltiplo del parámetro **Lambda**  y además el numero de nodos no supera a **max-node-counts**  se busca el nodo **U** con el mayor error y el nodo **V** que es el nodo vecino a **U** con mayor error, insertamos un nuevo nodo **R** cuyo vector de referencia sea la media posición entre **U** y **V** , sucesivamente borramos la arista entre **U** y **V**  y conectamos **U** con **R**  y **R**  con **V**  mediante aristas.
-
-* Modificamos los errores de **U**,  **V** y **R** siguiendo la siguiente asignación con un parámetro Alpha que nosotros escogemos.
+* Incrementamos la edad de todas las aristas que unen a **S**  con sus vecinos.
+* Si **S** y **T** no son conexos, se crea una arista de edad 0 entre ellos.
+* Se comprueba que no existe ninguna arista con una edad superior a la marcada por el parámetro **A_max_limit**, si se diera este caso, se eliminaría dicha arista, comprobando que si al hacerlo algún nodo queda aislado, este será eliminado.
+* Si la iteración es múltiplo del parámetro **Lambda**  y además el numero de nodos no supera a **max-node-counts**,  se busca un nodo **U** que será el de mayor error y el nodo **V**  de mayor error, vecino a **U**. Insertamos un nuevo nodo **R** cuyo vector de referencia sea el mínimo equidistante a **U** y **V** , sucesivamente :
+  * Eliminamos la arista entre **U** y **V**.
+  * Conectamos **U** con **R**  y **R**  con **V**.
+* Modificamos los errores de **U**,  **V** y **R** siguiendo la siguiente asignación mediante un parámetro Alpha predefinido.
 
 
 $$
-{ error}_u <- {\alpha} * { error}_u
+{ error}_u ← {\alpha} * { error}_u
 $$
 
 $$
-{ error}_v <- {\alpha} * { error}_v
+{ error}_v ← {\alpha} * { error}_v
 $$
 
 $$
-{ error}_r <-  { error}_u
+{ error}_r ← { error}_u
 $$
 
 
 
 
 
-* Ajustamos los errores de los nodos j con el parámetro Beta
+* Ajustamos los errores de los nodos inalterados anteriormente mediante el parámetro Beta, como se muestra a continuación.
 
 
 
 
 $$
-{ error}_j <--    { error}_j - {\beta} * { error}_j
+{ error}_j ←   { error}_j - {\beta} * { error}_j
 $$
 
 
-### Distribución y formato del código en netlogo
+### Distribución y formato del código en NetLogo
 
-Para este trabajo nosotros nos hemos decantado por crear una librería con el código de GNG,con  2 to do principales (setup y step).
+Para este trabajo nos hemos decantado por crear una librería con el código de GNG.
 
-* Este es el  setup que inicializa el paso 0 del algoritmo.
+* El siguiente método, realiza la preparación para la ejecución de la primera iteración del algoritmo.
+  * Limpia los patches, resetea los ticks.
+  * Se crean los dos nodos iniciales y se interconectan.
 
 ```
 to GNG:setup
-;  ask patches [set pcolor white]
   clear-turtles
   reset-ticks
-;  resize-world 0 100 0 100
-;  set-patch-size 5
   set node-count 0
-;  
-;  set ew 0.05 
-;  set en 0.0006
-;  ;------ Creacion de la nube de puntos -------
-;  ; (Crear un metodo que haga esto para una lista de puntos en un csv
-;  repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
-;  ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
   set x-node [0 0]
   repeat 2 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) ]
   create-turtles 1 [
     set xcor 0
-    ;print xcor
     set ycor 0
     set color red
     set shape "circle"
@@ -134,51 +133,14 @@ to GNG:setup
   ]
   set x-node turtles with [label = "x"]
   GNG:edge-to 0 1
-  ; Utilizar el metodo /GNG:edge-to n1 n2/
 end
 
  
 ```
 
-```
-
-to GNG:setup
-;  ask patches [set pcolor white]
-  clear-turtles
-  reset-ticks
-;  resize-world 0 100 0 100
-;  set-patch-size 5
-  set node-count 0
-;  
-;  set ew 0.05 
-;  set en 0.0006
-;  ;------ Creacion de la nube de puntos -------
-;  ; (Crear un metodo que haga esto para una lista de puntos en un csv
-;  repeat 50[ ask one-of patches with [pcolor = white and pxcor > 40 and pxcor < 60 and pycor > 40 and pycor < 60] [set pcolor black] ]
-;  ;-------- Creacion de la grid y los links introducidos mediante el csv -------------------
-  set x-node [0 0]
-  repeat 2 [ GNG:crear-nodo (list (random max-pxcor) (random max-pycor)) ]
-  create-turtles 1 [
-    set xcor 0
-    ;print xcor
-    set ycor 0
-    set color red
-    set shape "circle"
-    set size 2
-    set label "x"
-  ]
-  set x-node turtles with [label = "x"]
-  GNG:edge-to 0 1
-  ; Utilizar el metodo /GNG:edge-to n1 n2/
-end
-```
-
-
-
-* Este es el step que equivale al algoritmo previamente explicado usando funciones externas creadas por nosotros.
+* El siguiente método se iterará asiduamente siguiendo el pseudo-código expuesto anteriormente.
 
 ~~~netlogo
-``` [netlogo
 to GNG:step
   ; Se establece el vector de entrada
   if (node-count - 1) >= max-node-count [ stop ]
@@ -246,13 +208,13 @@ to GNG:step
     ask GNG:nodes [ set node-error node-error - beta * node-error]
   ]
   tick
-end
-```
 ~~~
 
-Todo este código es llamado en nuestro método principal, la cual tiene 2 métodos de creación de bases de datos.
+Los siguientes métodos son los utilizados para la importación y representación de los datos en el espacio vectorial. Han sido creados para realizar las pruebas de nuestra librería. 
 
-* Generación aleatoria
+Todo usuario que desee dar uso a la librería del algoritmo GNG deberá reimplementar cada método de importación y representación del espacio vectorial según el fin de su propósito.
+
+* Generación aleatoria de n datos distribuidos en bolsas por el espacio.
 
   ```
   to setup-data2 [n]
@@ -272,7 +234,7 @@ Todo este código es llamado en nuestro método principal, la cual tiene 2 méto
   end
   ```
 
-* Mediante carga de un fichero externo con las coordenadas de los datos en formato **CSV** aprovechando la extensión homónima:
+* Mediante la carga de un fichero externo con las coordenadas de los datos en formato **CSV** aprovechando la extensión homónima:
 
   ```
   to-report load [f]
@@ -302,9 +264,7 @@ Todo este código es llamado en nuestro método principal, la cual tiene 2 méto
 
   
 
-Finalmente colocamos un botón continuo que llame al step de la librería para correr el algoritmo.
-
-
+Finalmente colocamos un botón reiterante que llame a la función step de la librería para ejecutar el algoritmo.
 
 
 
@@ -314,11 +274,11 @@ Nos gustaría finalizar este trabajo hablando sobre los efectos que tienen los p
 
 * **Lambda**
 
-  Como podemos observar en las graficas, lambda es un regulador de velocidad de creación de nodos. 
+  Como podemos observar en las graficas, lambda es un regulador de velocidad en la creación de nodos. 
 
-  Ya que solo se puede crear nodos cuando el contador del algoritmo sea múltiplo, si se ponen un numero muy grande tiene que pasar mucho rato entre la creación de nuevos nodos.
+  El algoritmo tiene un contador interno de ticks (pulsos), se crea un nodo nuevo cada vez que dicho contador sea múltiplo de lambda, por lo que si se pone un numero muy grande el tiempo entre la creación de nuevos nodos aumenta.
 
-  Lambda muy pequeño.
+  Lambda pequeño.
 
 
 
@@ -326,25 +286,29 @@ Nos gustaría finalizar este trabajo hablando sobre los efectos que tienen los p
 
 
 
-Lambda muy grande 
+Lambda grande
 
 <img src=".\images\L1.png" style="zoom: 85%;" />
 
 * **Alpha** y **Beta**
 
-  Ambos son parámetros que deciden la velocidad de decremento de los errores,y al ejecutarlo modificado sobre nuestros ejemplo no podemos apreciar ningún cambio significativo.
+  Ambos son parámetros usados para modificar la velocidad de decremento de los errores de los nodos.
+
+  En nuestros ejemplos no se aprecia diferencia alguna en la comparativa de valores que hemos evaluado.
 
 * **A_limit**
 
-Esto limita  la edad que pueden alcanzar las aristas,puede que otros modelos se aprecie,sin embargo nosotros con nuestros ejemplos de prueba no notamos diferencia alguna.
+  Este parámetro limita la edad que pueden alcanzar las aristas, puede que en otros modelos mas complejos se aprecie, sin embargo nuestros ejemplos de prueba no consiguen magnificar cambios en el clustering apreciables.
 
 * **E w**
 
-  Al incrementar este parámetro podemos observar como los nodos se mueven mucho mas ya que este parámetro es el que indica cuanto han de moverse los nodos seleccionados.
+  Es un factor multiplicativo que va ha determinar los saltos de los nodos.
 
-  ### Ejemplo finales
+  Al incrementar este parámetro podemos observar que el movimiento de los nodos es tan errante que no consiguen converger en una solución optima.
 
-  Ejemplo aleatorio
+  ### Pruebas realizadas
+
+  Ejemplo aleatorio:
 
   <img src=".\images\C3.png" style="zoom: 85%;" />
 

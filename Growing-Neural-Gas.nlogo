@@ -52,25 +52,7 @@ to setup-file
     set node-error 0.0
     set color grey ]
   ]
-
-;  foreach load Ejemplo  [x ->
-;    create-data 1 [
-;    setxy ((item 0 x) + random-entre-dos 2 -2) ((item 1 x) + random-entre-dos 2 -2)
-;    set size 1
-;    set shape "dot"
-;    set color black ]
-;  ]
 end
-
-to save-to-file
-  let fileData [ (list round xcor round ycor) ] of data
-  set fileData fput ["x" "y"] fileData
-  csv:to-file "datasave.data" fileData
-end
-
-;to-report random-entre-dos [ a b ]
-;    report a + random (b - a)
-;end
 @#$#@#$#@
 GRAPHICS-WINDOW
 433
@@ -183,23 +165,6 @@ BUTTON
 237
 Cargar de Fichero
 setup-file
-NIL
-1
-T
-OBSERVER
-NIL
-NIL
-NIL
-NIL
-1
-
-BUTTON
-11
-247
-143
-280
-Exportar a fichero
-save-to-file
 NIL
 1
 T
